@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>考公人 · 备考面板</title>
+    <!-- 使用柔和的字体和图标库，提升阅读体验 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', 'PingFang SC', Roboto, system-ui, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fb;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem 1.5rem;
+        }
+
+        /* 主面板卡片 —— 简洁、留白、专注 */
+        .panel {
+            max-width: 1100px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 36px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            padding: 2rem 2rem 2rem 2rem;
+            transition: all 0.2s;
+        }
+
+        /* 头部区域：问候语 + 考试倒计时 */
+        .header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 2px dashed #e2e8f0;
+        }
+
+        .greeting h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .greeting h1 i {
+            color: #3b82f6;
+            font-size: 2rem;
+        }
+
+        .greeting .sub {
+            color: #64748b;
+            margin-top: 0.35rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .countdown {
+            background: #1e293b;
+            color: white;
+            padding: 0.9rem 1.8rem;
+            border-radius: 60px;
+            box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .countdown i {
+            font-size: 1.4rem;
+            color: #fbbf24;
+        }
+
+        .countdown .days {
+            font-size: 1.6rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .countdown .label {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            letter-spacing: 0.3px;
+        }
+
+        /* 核心模块网格 */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 1.5rem 1.4rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+            border: 1px solid #eef2f6;
+            transition: all 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: #cbd5e1;
+            box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.08);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .card-header i {
+            font-size: 1.8rem;
+            color: #3b82f6;
+            opacity: 0.8;
+        }
+
+        .card-header .tag {
+            background: #eef2ff;
+            color: #3b82f6;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.2rem 0.7rem;
+            border-radius: 40px;
+            letter-spacing: 0.3px;
+        }
+
+        .card h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 0.4rem;
+        }
+
+        .card p {
+            font-size: 0.9rem;
+            color: #64748b;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .progress-bar {
+            background: #f1f5f9;
+            height: 8px;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 0.75rem;
+        }
+
+        .progress-fill {
+            height: 8px;
+            border-radius: 20px;
+            background: #3b82f6;
+            width: 0%;
+        }
+
+        .progress-fill.green {
+            background: #10b981;
+        }
+
+        .progress-fill.amber {
+            background: #f59e0b;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #475569;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-row span:last-child {
+            color: #1e293b;
+            font-weight: 700;
+        }
+
+        /* 每日金句 / 积累模块 */
+        .daily-quote {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 24px;
+            padding: 1.6rem 2rem;
+            margin-bottom: 2rem;
+            border-left: 6px solid #3b82f6;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .quote-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .quote-text {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #1e293b;
+            line-height: 1.5;
+            font-style: italic;
+        }
+
+        .quote-source {
+            font-size: 0.85rem;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .quote-source i {
+            color: #f59e0b;
+        }
+
+        .refresh-quote {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 60px;
+            padding: 0.6rem 1.4rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+        }
+
+        .refresh-quote:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        /* 快速刷题区域 */
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: space-between;
+            align-items: center;
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 1.2rem 1.5rem;
+            border: 1px solid #eef2f6;
+            margin-bottom: 0.5rem;
+        }
+
+        .quick-actions .title {
+            font-weight: 700;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 1.1rem;
+        }
+
+        .quick-actions .title i {
+            color: #3b82f6;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+
+        .action-btn {
+            background: #f1f5f9;
+            border: none;
+            border-radius: 40px;
+            padding: 0.6rem 1.3rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            border: 1px solid transparent;
+        }
+
+        .action-btn i {
+            color: #3b82f6;
+            font-size: 0.95rem;
+        }
+
+        .action-btn:hover {
+            background: #e2e8f0;
+            border-color: #cbd5e1;
+        }
+
+        /* 底部小贴士 */
+        .footer-note {
+            margin-top: 1.5rem;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-note i {
+            margin-right: 0.25rem;
+            color: #94a3b8;
+        }
+
+        /* 响应式 */
+        @media (max-width: 640px) {
+            .panel {
+                padding: 1.5rem;
+                border-radius: 28px;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .countdown {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .daily-quote {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .quick-actions {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="panel">
+        <!-- 头部：问候 + 倒计时 -->
+        <div class="header">
+            <div class="greeting">
+                <h1>
+                    <i class="fas fa-graduation-cap"></i>
+                    早上好，考公人
+                </h1>
+                <div class="sub">
+                    <i class="far fa-calendar-alt" style="margin-right: 0.3rem;"></i>
+                    2025年3月15日 · 距离省考还有
+                </div>
+            </div>
+            <div class="countdown">
+                <i class="fas fa-hourglass-half"></i>
+                <div>
+                    <div class="days">42</div>
+                    <div class="label">天</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 核心模块卡片：行测、申论、公基、面试 -->
+        <div class="grid">
+            <!-- 行测 -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-calculator"></i>
+                    <span class="tag">模块一</span>
+                </div>
+                <h3>行测</h3>
+                <p>言语、数量、判断、资料、常识</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 72%;"></div>
+                </div>
+                <div class="stat-row">
+                    <span>正确率</span>
+                    <span>72%</span>
+                </div>
+                <div class="stat-row" style="margin-bottom: 0;">
+                    <span>今日刷题</span>
+                    <span>0/120</span>
+                </div>
+            </div>
+
+            <!-- 申论 -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-pen-fancy"></i>
+                    <span class="tag">模块二</span>
+                </div>
+                <h3>申论</h3>
+                <p>归纳概括、综合分析、公文写作</p>
+                <div class="progress-bar">
+                    <div class="progress-fill green" style="width: 58%;"></div>
+                </div>
+                <div class="stat-row">
+                    <span>素材积累</span>
+                    <span>58%</span>
+                </div>
+                <div class="stat-row" style="margin-bottom: 0;">
+                    <span>今日写作</span>
+                    <span>未开始</span>
+                </div>
+            </div>
+
+            <!-- 公基 / 常识 -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-book-open"></i>
+                    <span class="tag">模块三</span>
+                </div>
+                <h3>公基·常识</h3>
+                <p>时政、法律、经济、人文、科技</p>
+                <div class="progress-bar">
+                    <div class="progress-fill amber" style="width: 45%;"></div>
+                </div>
+                <div class="stat-row">
+                    <span>知识点覆盖</span>
+                    <span>45%</span>
+                </div>
+                <div class="stat-row" style="margin-bottom: 0;">
+                    <span>今日学习</span>
+                    <span>15分钟</span>
+                </div>
+            </div>
+
+            <!-- 面试 -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-comments"></i>
+                    <span class="tag">模块四</span>
+                </div>
+                <h3>面试</h3>
+                <p>结构化、无领导、答题框架</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 30%; background: #8b5cf6;"></div>
+                </div>
+                <div class="stat-row">
+                    <span>练习进度</span>
+                    <span>30%</span>
+                </div>
+                <div class="stat-row" style="margin-bottom: 0;">
+                    <span>今日模拟</span>
+                    <span>0次</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 每日金句 / 申论素材 -->
+        <div class="daily-quote">
+            <div class="quote-content">
+                <div class="quote-text" id="quoteText">
+                    “路虽远，行则将至；事虽难，做则必成。”
+                </div>
+                <div class="quote-source">
+                    <i class="fas fa-quote-right"></i>
+                    <span id="quoteSource">《荀子·修身》 · 申论素材</span>
+                </div>
+            </div>
+            <div class="refresh-quote" id="refreshQuoteBtn">
+                <i class="fas fa-rotate-right"></i> 换一句
+            </div>
+        </div>
+
+        <!-- 快速刷题入口 -->
+        <div class="quick-actions">
+            <div class="title">
+                <i class="fas fa-bolt"></i> 快速刷题
+            </div>
+            <!-- dify大模型嵌入 -->
+            <iframe
+            src="http://127.0.0.1/chatbot/vBrHIN6JfT437OjK"
+            style="width: 100%; height: 80%; min-height: 400px"
+            frameborder="0"
+            allow="microphone;clipboard-write">
+            </iframe>
+            <div class="action-buttons">
+                <button class="action-btn" onclick="alert('进入行测·言语理解专项刷题')">
+                    <i class="fas fa-language"></i> 言语
+                </button>
+                <button class="action-btn" onclick="alert('进入行测·数量关系专项刷题')">
+                    <i class="fas fa-square-root-variable"></i> 数量
+                </button>
+                <button class="action-btn" onclick="alert('进入行测·判断推理专项刷题')">
+                    <i class="fas fa-puzzle-piece"></i> 判断
+                </button>
+                <button class="action-btn" onclick="alert('进入行测·资料分析专项刷题')">
+                    <i class="fas fa-chart-simple"></i> 资料
+                </button>
+                <button class="action-btn" onclick="alert('进入申论·概括归纳练习')">
+                    <i class="fas fa-file-lines"></i> 申论
+                </button>
+            </div>
+        </div>
+
+        <!-- 底部小贴士 -->
+        <div class="footer-note">
+            <span><i class="far fa-clock"></i> 今日已学习 2.5 小时</span>
+            <span><i class="fas fa-fire"></i> 连续打卡 12 天</span>
+            <span><i class="fas fa-chart-line"></i> 本周正确率 +5%</span>
+        </div>
+    </div>
+
+    <script>
+        // 每日金句库 —— 适合考公人阅读的短句
+        const quotes = [
+            { text: "“路虽远，行则将至；事虽难，做则必成。”", source: "《荀子·修身》 · 申论素材" },
+            { text: "“为政之道，以顺民心为本，以厚民生为本。”", source: "《论语》 · 面试金句" },
+            { text: "“功崇惟志，业广惟勤。”", source: "《尚书》 · 申论必备" },
+            { text: "“利民之事，丝发必兴；厉民之事，毫末必去。”", source: "《之江新语》 · 面试素材" },
+            { text: "“行之力则知愈进，知之深则行愈达。”", source: "《张子正蒙注》 · 申论积累" },
+            { text: "“不驰于空想，不骛于虚声。”", source: "李大钊 · 面试引用" },
+            { text: "“治国有常，而利民为本。”", source: "《淮南子》 · 常识考点" },
+            { text: "“学所以益才也，砺所以致刃也。”", source: "《说苑》 · 申论金句" }
+        ];
+
+        const quoteTextEl = document.getElementById('quoteText');
+        const quoteSourceEl = document.getElementById('quoteSource');
+        const refreshBtn = document.getElementById('refreshQuoteBtn');
+
+        let currentIndex = 0;
+
+        // 随机切换下一句，避免连续重复
+        function getRandomQuoteIndex() {
+            let newIndex;
+            do {
+                newIndex = Math.floor(Math.random() * quotes.length);
+            } while (newIndex === currentIndex && quotes.length > 1);
+            return newIndex;
+        }
+
+        function updateQuote() {
+            const idx = getRandomQuoteIndex();
+            currentIndex = idx;
+            quoteTextEl.textContent = quotes[idx].text;
+            quoteSourceEl.textContent = quotes[idx].source;
+        }
+
+        refreshBtn.addEventListener('click', updateQuote);
+
+        // 可选：页面加载后随机展示一句，而不是固定第一句
+        window.addEventListener('DOMContentLoaded', () => {
+            const randomStart = Math.floor(Math.random() * quotes.length);
+            currentIndex = randomStart;
+            quoteTextEl.textContent = quotes[randomStart].text;
+            quoteSourceEl.textContent = quotes[randomStart].source;
+        });
+    </script>
+</body>
+</html>
