@@ -1,15 +1,12 @@
 from langchain_community.chat_message_histories import SQLChatMessageHistory
-from langchain_core import chat_history
-from langchain_core.chat_history import InMemoryChatMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.runnables import RunnableWithMessageHistory
-from langsmith.prompt_cache import configure_global_async_prompt_cache
+from langchain_core.runnables import RunnableWithMessageHistory, RunnablePassthrough
 
 from my_llm import local_llm
 
 #提示词模板
 prompt = ChatPromptTemplate.from_messages([
-    ("system","你是一个乐于助人的AI聊天助手，善于解决别人的烦恼，尽你所能回答用户的问题"),
+    ("system","{system_message}"),  #动态注入消息
     MessagesPlaceholder(variable_name="chat_history",optional=True),
     # ("MessagesPlaceholder","chat_history"),
     # 跟上面的写法等价
@@ -48,7 +45,7 @@ def summarize_messages(current_input):
     stored_messages = chat_history.messages
 
     if len(stored_messages)<=2:
-        return False
+        return {"original_messages":stored_messages,"summary":"None"}
 
     last_two_messages=stored_messages[-2:]
     messages_to_summarize = stored_messages[:-2]
@@ -61,12 +58,12 @@ def summarize_messages(current_input):
 
     summarization_prompt= summarization_prompt | llm
     #生成摘要
-    summarize_messages = summarization_prompt.invoke({"chat_history": messages_to_summarize})
+    summarize_message = summarization_prompt.invoke({"chat_history": messages_to_summarize})
 
-    chat_history.clear()
-    chat_history.add_message(summarize_messages)
-    for message in last_two_messages:
-        chat_history.add_message(message)
+    return {
+        "original_messages":last_two_messages,
+        "summary":summarize_message
+    }
 
     return True
 
@@ -77,11 +74,22 @@ chain_with_message_history= RunnableWithMessageHistory(
     history_messages_key="chat_history"
 )
 
-result1=chain_with_message_history.invoke({"input":"我叫吴彦祖"},config={"configurable":{"session_id":"user123"}})
+final_chain = (RunnablePassthrough.assign(messages_summarized=summarize_messages)) | RunnablePassthrough.assign(
+    input=lambda x: x["input"],
+    chat_history=lambda x: x["messages_summarized"]["original_messages"],
+    system_message=lambda x: f"你是一个乐于助人的助手。尽你所能回答所有问题。摘要:{x['messages_summarized']['summary']}"
+    if x["messages_summarized"].get("summary") else "无摘要"
+) | chain_with_message_history
+
+
+result1=final_chain.invoke({"input":"你好，我叫吴彦祖","config":{"configurable":{"session_id":"user123"}}},
+                                          config={"configurable": {"session_id": "user123"}})
 print(result1.content)
 
-result2=chain_with_message_history.invoke({"input":"我的名字是什么？"},config={"configurable":{"session_id":"user123"}})
+result2=final_chain.invoke({"input":"你叫什么名字？","config":{"configurable":{"session_id":"user123"}}},
+                                          config={"configurable":{"session_id":"user123"}})
 print(result2.content)
 
-result3=chain_with_message_history.invoke({"input":"历史上有谁和我同名同姓？"},config={"configurable":{"session_id":"user123"}})
+result3=final_chain.invoke({"input":"历史上有谁和我同名同姓？","config":{"configurable":{"session_id":"user123"}}},
+                                          config={"configurable":{"session_id":"user123"}})
 print(result3.content)
