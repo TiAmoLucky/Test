@@ -1,6 +1,9 @@
+from email.mime import audio
+
 from langchain_community.chat_message_histories import SQLChatMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableWithMessageHistory, RunnablePassthrough
+import gradio as gr
 
 from my_llm import local_llm
 
@@ -78,18 +81,31 @@ final_chain = (RunnablePassthrough.assign(messages_summarized=summarize_messages
     input=lambda x: x["input"],
     chat_history=lambda x: x["messages_summarized"]["original_messages"],
     system_message=lambda x: f"你是一个乐于助人的助手。尽你所能回答所有问题。摘要:{x['messages_summarized']['summary']}"
-    if x["messages_summarized"].get("summary") else "无摘要"
+    if x["messages_summarized"].get("summary.content") else "无摘要"
 ) | chain_with_message_history
 
 
-result1=final_chain.invoke({"input":"你好，我叫吴彦祖","config":{"configurable":{"session_id":"user123"}}},
-                                          config={"configurable": {"session_id": "user123"}})
-print(result1.content)
+# result1=final_chain.invoke({"input":"你好，我的名字叫吴彦祖","config":{"configurable":{"session_id":"user123"}}},
+#                                           config={"configurable": {"session_id": "user123"}})
+# print(result1.content)
+#
+# result2=final_chain.invoke({"input":"请你用我的名字写一首诗？","config":{"configurable":{"session_id":"user123"}}},
+#                                           config={"configurable":{"session_id":"user123"}})
+# print(result2.content)
+#
+# result3=final_chain.invoke({"input":"请你将这首诗进行润色，需要对仗工整，五言绝句","config":{"configurable":{"session_id":"user123"}}},
+#                                           config={"configurable":{"session_id":"user123"}})
+# print(result3.content)
 
-result2=final_chain.invoke({"input":"你叫什么名字？","config":{"configurable":{"session_id":"user123"}}},
-                                          config={"configurable":{"session_id":"user123"}})
-print(result2.content)
+with gr.Blocks(title="多模态聊天机器人",theme=gr.themes.soft()) as block:
+    chatbot=gr.Chatbot(type="messages",height=500,label="聊天机器人")
+    with gr.Row:
+        with gr.Column(scale=4):
+            uesr_input=gr.Textbox(placeholder="请给机器人发送消息...",label="文字输入",max_lines=5)
+            submit_btn=gr.Button("发送",variant="primary")
 
-result3=final_chain.invoke({"input":"历史上有谁和我同名同姓？","config":{"configurable":{"session_id":"user123"}}},
-                                          config={"configurable":{"session_id":"user123"}})
-print(result3.content)
+        with gr.Column(scale=1):
+            audio_input=gr.Audio(sources=["macrophone"],lable="请语音输入...",type="filepath",format="wav")
+
+if __name__=="__main__":
+    block.launch()
