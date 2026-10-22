@@ -61,7 +61,6 @@ chain_with_message_history = RunnableWithMessageHistory(
 final_chain = (RunnablePassthrough.assign(messages_summarized=summarize_messages)) | RunnablePassthrough.assign(
     input=lambda x: x["input"],
     chat_history=lambda x: x["messages_summarized"]["original_messages"],
-    # 判断逻辑修正，直接用 summary 判断
     system_message=lambda x: (
         f"你是一个乐于助人的助手。尽你所能回答所有问题。摘要:{x['messages_summarized']['summary']}"
         if x["messages_summarized"]["summary"] != "None"
@@ -96,7 +95,7 @@ def execute_chain(chat_history):
     return chat_history
 
 
-# 新增：语音处理函数
+# 语音处理函数
 def process_audio(audio_path):
     if not audio_path:
         return "", gr.update()
