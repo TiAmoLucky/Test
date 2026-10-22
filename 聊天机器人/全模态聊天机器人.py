@@ -117,7 +117,7 @@ def submit_messages(history):
     user_messages=get_last_user_after_assistant(history)
     print(user_messages)
 
-with gr.Blocks(title="多模态聊天机器人") as block:
+with gr.Blocks(title="聊天机器人") as block:
     chatbot=gr.Chatbot(height=500,label="聊天机器人")
     # 创建多模态输入框
     chat_input = gr.MultimodalTextbox(

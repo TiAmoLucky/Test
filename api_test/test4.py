@@ -18,7 +18,7 @@ payload = {
         "ci": "测试内容"
     },
     "response_mode": "blocking",  # 阻塞模式，等待全部生成完再返回
-    "user": "python-test-user"
+    "user": "python-api_test-user"
 }
 
 # 4. 发送 POST 请求

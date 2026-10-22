@@ -105,7 +105,7 @@ def process_audio(audio_path):
     return text, None
 
 
-with gr.Blocks(title="多模态聊天机器人") as block:
+with gr.Blocks(title="聊天机器人") as block:
     chatbot = gr.Chatbot(height=500, label="聊天机器人")
     with gr.Row():
         with gr.Column(scale=4):

@@ -1,7 +1,7 @@
 from langchain_core.prompts import FewShotPromptTemplate
 from langchain_core.prompts import PromptTemplate
 
-from 多模态聊天机器人.my_llm import qwen_llm
+from 聊天机器人.my_llm import qwen_llm
 
 examples = [
     {"input": "我今天很开心", "output": "[happy] I am very happy today."},
