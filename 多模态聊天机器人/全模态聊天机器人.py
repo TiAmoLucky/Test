@@ -1,11 +1,9 @@
-from email.mime import audio
-
 from langchain_community.chat_message_histories import SQLChatMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableWithMessageHistory, RunnablePassthrough
 import gradio as gr
 
-from my_llm import local_llm
+from my_llm import qwen_llm
 
 #提示词模板
 prompt = ChatPromptTemplate.from_messages([
@@ -16,7 +14,7 @@ prompt = ChatPromptTemplate.from_messages([
     ("human","{input}")
 ])
 
-llm = local_llm
+llm = qwen_llm
 
 chain=prompt | llm
 
@@ -68,8 +66,6 @@ def summarize_messages(current_input):
         "summary":summarize_message
     }
 
-    return True
-
 chain_with_message_history= RunnableWithMessageHistory(
     chain,
     get_session_history,
@@ -80,32 +76,67 @@ chain_with_message_history= RunnableWithMessageHistory(
 final_chain = (RunnablePassthrough.assign(messages_summarized=summarize_messages)) | RunnablePassthrough.assign(
     input=lambda x: x["input"],
     chat_history=lambda x: x["messages_summarized"]["original_messages"],
-    system_message=lambda x: f"你是一个乐于助人的助手。尽你所能回答所有问题。摘要:{x['messages_summarized']['summary']}"
-    if x["messages_summarized"].get("summary.content") else "无摘要"
+    system_message=lambda x: (
+        f"你是一个乐于助人的助手。尽你所能回答所有问题。摘要:{x['messages_summarized']['summary']}"
+        if x["messages_summarized"]["summary"] != "None"
+        else "你是一个乐于助人的助手。尽你所能回答所有问题。"
+    )
 ) | chain_with_message_history
 
+def get_last_user_after_assistant(history):
+    """反向遍历找到最后一个assistant的位置，并返回后面的所有user消息"""
+    if not history:
+        return None
+    if history[-1]["role"] == "assistant":
+        return None
 
-# result1=final_chain.invoke({"input":"你好，我的名字叫吴彦祖","config":{"configurable":{"session_id":"user123"}}},
-#                                           config={"configurable": {"session_id": "user123"}})
-# print(result1.content)
-#
-# result2=final_chain.invoke({"input":"请你用我的名字写一首诗？","config":{"configurable":{"session_id":"user123"}}},
-#                                           config={"configurable":{"session_id":"user123"}})
-# print(result2.content)
-#
-# result3=final_chain.invoke({"input":"请你将这首诗进行润色，需要对仗工整，五言绝句","config":{"configurable":{"session_id":"user123"}}},
-#                                           config={"configurable":{"session_id":"user123"}})
-# print(result3.content)
+    last_assistant_idx = -1
+    for i in range(len(history) - 1, -1, -1):
+        if history[i]["role"] == "assistant":
+            last_assistant_idx = i
+            break
 
-with gr.Blocks(title="多模态聊天机器人",theme=gr.themes.soft()) as block:
-    chatbot=gr.Chatbot(type="messages",height=500,label="聊天机器人")
-    with gr.Row:
-        with gr.Column(scale=4):
-            uesr_input=gr.Textbox(placeholder="请给机器人发送消息...",label="文字输入",max_lines=5)
-            submit_btn=gr.Button("发送",variant="primary")
+    # 如果没有找到assistant
+    if last_assistant_idx == -1:
+        return history
+    else:
+        # 从assistant位置向后查找第一个user
+        return history[last_assistant_idx+1:]
 
-        with gr.Column(scale=1):
-            audio_input=gr.Audio(sources=["macrophone"],lable="请语音输入...",type="filepath",format="wav")
+
+def add_message(history, messages):
+    for m in messages["files"]:
+        print(m)
+        history.append({"role": "user", "content": {"path":m}})
+
+    if messages["text"] is None:
+        history.append({"role": "user", "content": messages["text"]})
+    return history,gr.MultimodalTextbox(value=None,interactive=False)
+
+def submit_messages(history):
+    user_messages=get_last_user_after_assistant(history)
+    print(user_messages)
+
+with gr.Blocks(title="多模态聊天机器人") as block:
+    chatbot=gr.Chatbot(height=500,label="聊天机器人")
+    # 创建多模态输入框
+    chat_input = gr.MultimodalTextbox(
+        interactive=True,  # 可交互
+        file_types=['image', '.wav', '.mp4'],
+        file_count="multiple",  # 允许多文件上传
+        placeholder="请输入信息或者上传文件...",  # 输入框提示文本
+        show_label=False,  # 不显示标签
+        sources=["microphone", "upload"],  # 支持麦克风和文件上传
+    )
+
+    chat_input.submit(
+        add_message, [chatbot, chat_input], [chatbot, chat_input]
+    ).then(
+        submit_messages,
+        [chatbot],
+        [chatbot],
+    )
+
 
 if __name__=="__main__":
-    block.launch()
+    block.launch(theme=gr.themes.Soft())
