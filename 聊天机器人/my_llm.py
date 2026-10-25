@@ -1,6 +1,7 @@
 import os
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
+from openai import OpenAI
 from funasr import AutoModel
 from funasr.utils.postprocess_utils import rich_transcription_postprocess
 
@@ -37,14 +38,29 @@ def speech_to_text(audio_path):
     )
     return rich_transcription_postprocess(res[0]["text"])
 
-# # ========== 测试本地 ==========
-# resp = local_llm.invoke("你是谁?")
-# print(resp.content)
+# ========== 云端通义千问全模态模型 (Omni) ==========
+class omni_llm:
+    def __init__(self):
+        self.client = OpenAI(
+            api_key=os.getenv("DASHSCOPE_API_KEY"),
+            base_url="https://cn-beijing.maas.qianwenaiapi.com/compatible-mode/v1",
+        )
+        self.model = "qwen3.5-omni-plus"
+        self.voice = "Ethan"
 
-# ========== 测试云端 ==========
-# resp2 = qwen_llm.invoke("你是谁?")
-# print(resp2.content)
+    def chat(self, messages, use_audio=False, **kwargs):
+        """统一的聊天接口"""
+        # 如果不需要音频，默认只返回文本
+        modalities = ["text", "audio"] if use_audio else ["text"]
 
-# ========== 测试语音模型 ==========
-# text = speech_to_text("测试音频路径.wav")
-# print("语音识别结果:", text)
+        return self.client.chat.completions.create(
+            model=self.model,
+            messages=messages,
+            modalities=modalities,
+            audio={"voice": self.voice, "format": "wav"},
+            **kwargs
+        )
+
+
+# 实例化一个全局对象，方便直接导入
+omni = omni_llm()
