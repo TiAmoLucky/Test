@@ -3,7 +3,7 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableWithMessageHistory, RunnablePassthrough
 import gradio as gr
 
-from my_llm import qwen_llm
+from llm.my_llm import qwen_llm
 
 #提示词模板
 prompt = ChatPromptTemplate.from_messages([
